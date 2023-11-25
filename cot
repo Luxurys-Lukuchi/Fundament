@@ -1,0 +1,423 @@
+cpp
+//Нечталенко Илья ИВТ-22
+#include <cassert>
+#include <iostream>  
+#include <fstream>  
+#include <stdexcept>  
+#include <limits>  
+#include <string> 
+#define NDEBUG
+
+enum ConcreteGrade {  // Определение перечисления для марок бетона
+    M100,
+    M200,
+    M300,
+    M400,
+    M500
+};
+
+class Foundation {  // Определение класса "Foundation" для представления фундамента
+private:
+    double length;  // Длина фундамента
+    double width;   // Ширина фундамента
+    double height;  // Высота фундамента
+    double density;  // Плотность материала фундамента
+    ConcreteGrade concreteGrade;  // Марка бетона
+
+    // Шаблонный метод для установки значения переменной с проверкой на положительность
+    template <typename T>
+    void setIfValid(T& variable, const T& value, const std::string& errorMessage) {
+        if (value <= 0) {
+            throw std::invalid_argument(errorMessage);
+        }
+        variable = value;
+    }
+
+public:
+    Foundation() : length(0), width(0), height(0), density(0), concreteGrade(M100) {}  // Конструктор по умолчанию
+
+    // Методы для установки и получения значений длины, ширины, высоты и марки бетона
+    void setLength(double len) {
+        setIfValid(length, len, "Length must be greater than 0");
+    }
+
+    double getLength() const {
+        return length;
+    }
+
+    void setWidth(double wid) {
+        setIfValid(width, wid, "Width must be greater than 0");
+    }
+
+    double getWidth() const {
+        return width;
+    }
+
+    void setHeight(double hei) {
+        setIfValid(height, hei, "Height must be greater than 0");
+    }
+
+    double getHeight() const {
+        return height;
+    }
+
+    // Методы для установки и получения марки бетона с соответствующим расчетом плотности
+    void setConcreteGrade(ConcreteGrade grade) {
+        concreteGrade = grade;
+        switch (grade) {
+        case M100:
+            density = 1500;
+            break;
+        case M200:
+            density = 1600;
+            break;
+        case M300:
+            density = 1700;
+            break;
+        case M400:
+            density = 1800;
+            break;
+        case M500:
+            density = 1900;
+            break;
+        default:
+            throw std::invalid_argument("Invalid concrete grade");
+        }
+    }
+
+    ConcreteGrade getConcreteGrade() const {
+        return concreteGrade;
+    }
+
+    
+
+    // Методы для расчета площади, объема, массы, силы давления и стоимости фундамента
+    double calculateArea() const {
+        return 2 * (length * width + length * height + width * height);
+    }
+
+    double calculateVolume() const {
+        return length * width * height;
+    }
+
+    double calculateMass() const {
+        return calculateVolume() * density;
+    }
+
+    double calculatePressureForce() const {
+        double gravity = 9.8;
+        return calculateMass() * gravity;
+    }
+
+    double calculateCost() const {
+        return calculateVolume() * 100;  // Просто для иллюстрации
+    }
+
+    void testFoundation() const {
+        // Задаем значения для объекта Foundation
+        Foundation testFoundation;
+        testFoundation.setLength(10.0);
+        testFoundation.setWidth(5.0);
+        testFoundation.setHeight(3.0);
+        testFoundation.setConcreteGrade(M300);
+
+        // Утверждения для проверки корректности установки значений
+        assert(10.0 == testFoundation.getLength());
+        assert(5.0 == testFoundation.getWidth());
+        assert(3.0 == testFoundation.getHeight());
+        assert(M300 == testFoundation.getConcreteGrade());
+
+        // Вычисляем ожидаемые значения
+        double expectedVolume = 10.0 * 5.0 * 3.0;
+        double expectedMass = expectedVolume * 1700;  // Плотность для M300
+        double expectedCost = expectedVolume * 100;
+
+        // Утверждения для сравнения вычисленных значений с ожидаемыми
+        assert(expectedVolume == testFoundation.calculateVolume());
+// Утверждения для сравнения вычисленных значений с ожидаемыми
+        assert(expectedVolume2 == testFoundation2.calculateVolume());
+        assert(expectedMass2 == testFoundation2.calculateMass());
+        assert(expectedCost2 == testFoundation2.calculateCost());
+
+        // Дополнительная проверка для значения массы из расчета плотности и объема
+        assert(testFoundation2.calculateMass() == expectedMass2);
+    }
+
+    // Перегруженный оператор сравнения для сравнения фундаментов по площади
+    bool operator<(const Foundation& other) const {
+        return calculateArea() < other.calculateArea();
+    }
+
+    // Вывод информации о фундаменте в консоль
+    void outputInformationConsole() const {
+        std::cout << "Length: " << getLength() << std::endl;
+        std::cout << "Width: " << getWidth() << std::endl;
+        std::cout << "Height: " << getHeight() << std::endl;
+        std::cout << "Concrete Grade: " << concreteGradeToString() << std::endl;
+        std::cout << "-----" << std::endl;
+    }
+
+    // Преобразование марки бетона в строку
+    std::string concreteGradeToString() const {
+        switch (concreteGrade) {
+        case M100:
+            return "M100";
+        case M200:
+            return "M200";
+        case M300:
+            return "M300";
+        case M400:
+            return "M400";
+        case M500:
+            return "M500";
+        default:
+            return "Unknown";
+        }
+    }
+
+    // Сохранение информации о фундаменте в текстовый и бинарный файлы
+    void saveToFile(const std::string& filename) const {
+        // Сохранение в текстовый файл
+        std::ofstream textFile(filename + ".txt", std::ios::app);
+        if (textFile.is_open()) {
+            textFile << "Length: " << length << std::endl;
+            textFile << "Width: " << width << std::endl;
+            textFile << "Height: " << height << std::endl;
+            textFile << "Density: " << density << std::endl;
+            textFile << "Concrete Grade: " << concreteGradeToString() << std::endl;
+            textFile << "Area: " << calculateArea() << std::endl;
+            textFile << "Volume: " << calculateVolume() << std::endl;
+            textFile << "Mass: " << calculateMass() << std::endl;
+            textFile << "Pressure Force: " << calculatePressureForce() << std::endl;
+            textFile << "Cost: " << calculateCost() << std::endl;
+            textFile << "-----" << std::endl;
+            textFile.close();
+        }
+        else {
+            throw std::runtime_error("Unable to open text file for writing");
+        }
+
+        // Сохранение в бинарный файл
+        std::ofstream binaryFile(filename, std::ios::binary | std::ios::app);
+        if (binaryFile.is_open()) {
+            binaryFile.write(reinterpret_cast<const char*>(&length), sizeof(length));
+            binaryFile.write(reinterpret_cast<const char*>(&width), sizeof(width));
+            binaryFile.write(reinterpret_cast<const char*>(&height), sizeof(height));
+            binaryFile.write(reinterpret_cast<const char*>(&density), sizeof(density));
+            binaryFile.write(reinterpret_cast<const char*>(&concreteGrade), sizeof(concreteGrade));
+            binaryFile.close();
+        }
+        else {
+            throw std::runtime_error("Unable to open binary file for writing");
+        }
+    }
+
+    // Загрузка информации о фундаменте из бинарного файла
+    void loadFromFile(const std::string& filename) {
+        std::ifstream binaryFile(filename, std::ios::binary);
+        if (binaryFile.is_open()) {
+            while (binaryFile.read(reinterpret_cast<char*>(&length), sizeof(length)) &&
+                binaryFile.read(reinterpret_cast<char*>(&width), sizeof(width)) &&
+                binaryFile.read(reinterpret_cast<char*>(&height), sizeof(height)) &&
+                binaryFile.read(reinterpret_cast<char*>(&density), sizeof(density)) &&
+                binaryFile.read(reinterpret_cast<char*>(&concreteGrade), sizeof(concreteGrade))) {
+                // Вывод информации о фундаменте в консоль
+                outputInformationConsole();
+            }
+            binaryFile.close();
+        }
+        else {
+            throw std::runtime_error("Unable to open binary file for reading");
+        }
+    }
+};
+else {
+            throw std::runtime_error("Unable to open binary file for writing");
+        }
+    }
+
+    // Загрузка информации о фундаменте из бинарного файла
+    void loadFromFile(const std::string& filename) {
+        std::ifstream binaryFile(filename, std::ios::binary);
+        if (binaryFile.is_open()) {
+            while (binaryFile.read(reinterpret_cast<char*>(&length), sizeof(length)) &&
+                binaryFile.read(reinterpret_cast<char*>(&width), sizeof(width)) &&
+                binaryFile.read(reinterpret_cast<char*>(&height), sizeof(height)) &&
+                binaryFile.read(reinterpret_cast<char*>(&density), sizeof(density)) &&
+                binaryFile.read(reinterpret_cast<char*>(&concreteGrade), sizeof(concreteGrade))) {
+                binaryFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            }
+            binaryFile.close();
+        }
+        else {
+            throw std::runtime_error("Unable to open file for reading");
+        }
+    }
+
+    // Статический метод для удаления динамического массива фундаментов
+    static void deleteDynamicArray(Foundation** array, int size) {
+        if (size == 1) {
+            delete array[0];
+        }
+        else {
+            for (int i = 0; i < size; ++i) {
+                delete array[i];
+            }
+            delete[] array;
+        }
+    }
+};
+
+int main() {
+
+    Foundation foundationObject;
+
+    // Запускаем тест для класса Foundation
+    foundationObject.testFoundation();
+    // Ввод количества объектов фундаментов
+    int numObjects;
+    std::cout << "How many foundation objects do you want to create and save: ";
+    std::cin >> numObjects;
+
+    // Создание динамического массива фундаментов
+    Foundation* foundationArray = new Foundation[numObjects];
+
+    // Ввод имени файла для сохранения
+    std::string saveFilename;
+    std::cout << "Enter the filename for saving: ";
+    std::cin >> saveFilename;
+
+    // Инициализация переменных для нахождения фундамента с минимальной площадью
+    int indexMinArea = -1;
+    double minArea = std::numeric_limits<double>::max();
+
+    // Цикл для ввода данных о фундаментах, их сохранения и поиска минимальной площади
+    for (int i = 0; i < numObjects; ++i) {
+        double len, wid, hei;
+        std::cout << "Foundation " << i + 1 << ":" << std::endl;
+
+        // Ввод параметров фундамента
+        std::cout << "Enter length: ";
+        std::cin >> len;
+        try {
+            foundationArray[i].setLength(len);
+        }
+        catch (const std::invalid_argument& e) {
+            std::cout << "Error: " << e.what() << std::endl;
+            return 1;
+        }
+
+        std::cout << "Enter width: ";
+        std::cin >> wid;
+        try {
+            foundationArray[i].setWidth(wid);
+        }
+        catch (const std::invalid_argument& e) {
+            std::cout << "Error: " << e.what() << std::endl;
+            return 1;
+        }
+
+        std::cout << "Enter height: ";
+        std::cin >> hei;
+        try {
+            foundationArray[i].setHeight(hei);
+        }
+        catch (const std::invalid_argument& e) {
+            std::cout << "Error: " << e.what() << std::endl;
+            return 1;
+        }
+
+        // Выбор марки бетона
+        std::cout << "Choose concrete grade:" << std::endl;
+        std::cout << "1. M100" << std::endl;
+        std::cout << "2. M200" << std::endl;
+        std::cout << "3. M300" << std::endl;
+        std::cout << "4. M400" << std::endl;
+        std::cout << "5. M500" << std::endl;
+        int gradeChoice;
+        std::cin >> gradeChoice;
+        switch (gradeChoice) {
+        case 1:
+            foundationArray[i].setConcreteGrade(M100);
+            break;
+        case 2:
+            foundationArray[i].setConcreteGrade(M200);
+            break;
+        case 3:
+            foundationArray[i].setConcreteGrade(M300);
+            break;
+        case 4:
+            foundationArray[i].setConcreteGrade(M400);
+            break;
+        case 5:
+            foundationArray[i].setConcreteGrade(M500);
+            break;
+        default:
+            std::cout << "Invalid choice" << std::endl;
+            return 1;
+        }
+
+        // Сохранение информации о фундаменте в файл
+        foundationArray[i].saveToFile(saveFilename);
+
+        // Поиск фундамента с минимальной площадью
+        double currentArea = foundationArray[i].calculateArea();
+        if (currentArea < minArea) {
+            minArea = currentArea;
+            indexMinArea = i;
+        }
+    }
+
+    // Вывод информации о фундаменте с минимальной площадью
+    std::cout << "The foundation with the minimum area is: " << std::endl;
+    foundationArray[indexMinArea].outputInformationConsole();
+
+    // Освобождение памяти, выделенной для динамического массива фундаментов
+    delete[] foundationArray;
+
+    // Ввод имени файла для загрузки
+    std::string loadFilename;
+    std::cout << "Enter the filename for loading: ";
+    std::cin >> loadFilename;
+
+    // Загрузка информации о фундаментах из файла
+    Foundation foundationFromFile;
+    foundationFromFile.loadFromFile(loadFilename);
+
+    return 0;
+}
+foundationArray[i].setConcreteGrade(M500);
+            break;
+        default:
+            std::cout << "Invalid concrete grade choice." << std::endl;
+            return 1;
+        }
+
+        // Сохранение информации о фундаменте в файл
+        foundationArray[i].saveToFile(saveFilename);
+
+        // Расчет стоимости фундамента и вывод на экран
+        double cost = foundationArray[i].calculateCost();
+        std::cout << "Cost of foundation " << i + 1 << ": " << cost << std::endl;
+
+        // Поиск фундамента с минимальной площадью
+        if (foundationArray[i] < foundationArray[indexMinArea]) {
+            minArea = foundationArray[i].calculateArea();
+            indexMinArea = i;
+        }
+    }
+
+    // Вывод информации о фундаменте с минимальной площадью
+    if (indexMinArea != -1) {
+        std::cout << "Foundation with the smallest area:" << std::endl;
+        foundationArray[indexMinArea].outputInformationConsole();
+    }
+    else {
+        std::cout << "No data to display for the foundation with the smallest area." << std::endl;
+    }
+
+    // Использование статического метода для удаления динамического массива фундаментов
+    Foundation::deleteDynamicArray(&foundationArray, numObjects);
+    return 0;
+
+}
