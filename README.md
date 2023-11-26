@@ -101,4 +101,4 @@
         - Постусловия: нет
 
           
-# Конец ADT Foundation
+   # Конец ADT Foundation
